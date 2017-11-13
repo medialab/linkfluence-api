@@ -86,7 +86,7 @@ def collect_words(startdate, enddate, focus=None, days=1):
     dt = dat.isoformat() + "+02:00"
     end = enddate
     while dat < end:
-        print dat.isoformat()[:10]
+        print dat.isoformat()[:10], focus
         enddat = dat + timedelta(days=days)
         enddt = enddat.isoformat() + "+02:00"
         res = collect_words_period(dt, enddt, focus)
@@ -104,19 +104,19 @@ format_for_csv = lambda x: unicode(x).encode("utf-8")
 def store_words(startdate, enddate, days=1, focus=("", None)):
     words = collect_words(startdate, enddate, focus[1])
     suffix = ""
-    if days == 1:
-        suffix = "_daily"
-    elif days == 7:
-        suffix = "_weekly"
     if focus[1]:
-        focus[0] = "_" + focus[0]
+        suffix = "_" + focus[0]
+    if days == 1:
+        suffix += "_daily"
+    elif days == 7:
+        suffix += "_weekly"
     for key in ["hashtags", "mentions", "namedEntities"]:
         headers = ["date", key[:-1], "doc", "impression", "reach"]
-        with open(os.path.join("data", key + focus[0] + suffix + ".csv"), "w") as f:
+        with open(os.path.join("data", key + suffix + ".csv"), "w") as f:
             print >> f, ",".join(headers)
             for row in words[key]:
                 print >> f, ",".join([format_for_csv(row[h]) for h in headers])
-        with open(os.path.join("data", key + focus[0] + suffix + ".json"), "w") as f:
+        with open(os.path.join("data", key + suffix + ".json"), "w") as f:
             json.dump(words[key], f)
 
 if __name__ == "__main__":
@@ -128,5 +128,5 @@ if __name__ == "__main__":
       ("melenchon", 82713),
       ("le-pen", 103736)
     ]:
-        store_words(datetime(2017, 3, 1), datetime(2017, 7, 1), 1, focus)
+        store_words(datetime(2017, 3, 3), datetime(2017, 7, 1), 1, focus)
         store_words(datetime(2016, 5, 1), datetime(2017, 7, 1), 7, focus)
