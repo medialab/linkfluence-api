@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-import os, json
+import os
+import json
+import time
 import hashlib
 import requests
 from datetime import datetime, timedelta
@@ -27,8 +29,9 @@ def download(route="", args={}):
         res = requests.post(url, headers=headers, data=json.dumps(args))
     if res.status_code == 429:
         print "ERROR: while collecting", route, args
-        print "too many calls for now, please retry in a few minutes"
-        exit(1)
+        print "too many calls for now, will retry in a few minutes"
+        time.sleep(60)
+        return download(route, args)
     data = res.json()
     with open(cache, "w") as f:
         json.dump(data, f)
@@ -61,16 +64,19 @@ def store_stories(startdate, enddate):
 #print json.dumps(clusters)
 # Get top keywords
 
-def collect_words_period(frm, to):
-    return download("/insights/cloud", {
+def collect_words_period(frm, to, focus=None):
+    args = {
       "fields": [],
       "metrics": ["doc", "reach", "impression"],
       "from": frm,
       "to": to,
       "tz": "Europe/Paris"
-    })["cloud"]
+    }
+    if focus:
+        args["focuses"] = focus
+    return download("/insights/cloud", args)["cloud"]
 
-def collect_words(startdate, enddate, days=1):
+def collect_words(startdate, enddate, focus=None, days=1):
     results = {
       "namedEntities": [],
       "hashtags": [],
@@ -80,10 +86,10 @@ def collect_words(startdate, enddate, days=1):
     dt = dat.isoformat() + "+02:00"
     end = enddate
     while dat < end:
-        print dat.isoformat()[:10]
+        print dat.isoformat()[:10], focus
         enddat = dat + timedelta(days=days)
         enddt = enddat.isoformat() + "+02:00"
-        res = collect_words_period(dt, enddt)
+        res = collect_words_period(dt, enddt, focus)
         for key in ["hashtags", "mentions", "namedEntities"]:
             k = key[:-1]
             for word, val in res[key].items():
@@ -95,9 +101,15 @@ def collect_words(startdate, enddate, days=1):
     return results
 
 format_for_csv = lambda x: unicode(x).encode("utf-8")
-def store_words(words, suffix=""):
-    if suffix:
-        suffix = "_" + suffix
+def store_words(startdate, enddate, days=1, focus=("", None)):
+    words = collect_words(startdate, enddate, focus[1], days)
+    suffix = ""
+    if focus[1]:
+        suffix = "_" + focus[0]
+    if days == 1:
+        suffix += "_daily"
+    elif days == 7:
+        suffix += "_weekly"
     for key in ["hashtags", "mentions", "namedEntities"]:
         headers = ["date", key[:-1], "doc", "impression", "reach"]
         with open(os.path.join("data", key + suffix + ".csv"), "w") as f:
@@ -108,6 +120,13 @@ def store_words(words, suffix=""):
             json.dump(words[key], f)
 
 if __name__ == "__main__":
-#    store_words(collect_words(datetime(2016, 5, 1), datetime(2017, 7, 1), 7), "weekly")
-#    store_words(collect_words(datetime(2017, 3, 1), datetime(2017, 7, 1)), "daily")
     store_stories(datetime(2016, 5, 1), datetime(2017, 7, 1))
+    for focus in [
+      ("hamon", 83192),
+      ("macron", 82709),
+      ("fillon", 82719),
+      ("melenchon", 82713),
+      ("le-pen", 103736)
+    ]:
+        store_words(datetime(2017, 3, 3), datetime(2017, 7, 1), 1, focus)
+        store_words(datetime(2016, 5, 1), datetime(2017, 7, 1), 7, focus)
