@@ -64,16 +64,19 @@ def store_stories(startdate, enddate):
 #print json.dumps(clusters)
 # Get top keywords
 
-def collect_words_period(frm, to):
-    return download("/insights/cloud", {
+def collect_words_period(frm, to, focus=None):
+    args = {
       "fields": [],
       "metrics": ["doc", "reach", "impression"],
       "from": frm,
       "to": to,
       "tz": "Europe/Paris"
-    })["cloud"]
+    }
+    if focus:
+        args["focuses"] = focus
+    return download("/insights/cloud", args)["cloud"]
 
-def collect_words(startdate, enddate, days=1):
+def collect_words(startdate, enddate, focus=None, days=1):
     results = {
       "namedEntities": [],
       "hashtags": [],
@@ -86,7 +89,7 @@ def collect_words(startdate, enddate, days=1):
         print dat.isoformat()[:10]
         enddat = dat + timedelta(days=days)
         enddt = enddat.isoformat() + "+02:00"
-        res = collect_words_period(dt, enddt)
+        res = collect_words_period(dt, enddt, focus)
         for key in ["hashtags", "mentions", "namedEntities"]:
             k = key[:-1]
             for word, val in res[key].items():
@@ -98,19 +101,32 @@ def collect_words(startdate, enddate, days=1):
     return results
 
 format_for_csv = lambda x: unicode(x).encode("utf-8")
-def store_words(words, suffix=""):
-    if suffix:
-        suffix = "_" + suffix
+def store_words(startdate, enddate, days=1, focus=("", None)):
+    words = collect_words(startdate, enddate, focus[1])
+    suffix = ""
+    if days == 1:
+        suffix = "_daily"
+    elif days == 7:
+        suffix = "_weekly"
+    if focus[1]:
+        focus[0] = "_" + focus[0]
     for key in ["hashtags", "mentions", "namedEntities"]:
         headers = ["date", key[:-1], "doc", "impression", "reach"]
-        with open(os.path.join("data", key + suffix + ".csv"), "w") as f:
+        with open(os.path.join("data", key + focus[0] + suffix + ".csv"), "w") as f:
             print >> f, ",".join(headers)
             for row in words[key]:
                 print >> f, ",".join([format_for_csv(row[h]) for h in headers])
-        with open(os.path.join("data", key + suffix + ".json"), "w") as f:
+        with open(os.path.join("data", key + focus[0] + suffix + ".json"), "w") as f:
             json.dump(words[key], f)
 
 if __name__ == "__main__":
-#    store_words(collect_words(datetime(2016, 5, 1), datetime(2017, 7, 1), 7), "weekly")
-#    store_words(collect_words(datetime(2017, 3, 1), datetime(2017, 7, 1)), "daily")
     store_stories(datetime(2016, 5, 1), datetime(2017, 7, 1))
+    for focus in [
+      ("hamon", 83192),
+      ("macron", 82709),
+      ("fillon", 82719),
+      ("melenchon", 82713),
+      ("le-pen", 103736)
+    ]:
+        store_words(datetime(2017, 3, 1), datetime(2017, 7, 1), 1, focus)
+        store_words(datetime(2016, 5, 1), datetime(2017, 7, 1), 7, focus)
