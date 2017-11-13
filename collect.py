@@ -39,17 +39,31 @@ def download(route="", args={}):
     return data
 
 # Get project settings
-settings = download()
+#settings = download()
 
 # Get clusters
-clusters = download("/stories", {
-  "interval": "weeks",
-  "from": "2016-05-01T00:00:00+01:00",
-  "to": "2017-07-01T00:00:00+02:00",
-  "tz": "Europe/Paris"
-})
+def collect_stories_period_page(frm, to, startIndex, rsltCount):
+    return download("/stories", {
+          "interval": "day",
+          "from": frm,#"2016-05-01T00:00:00+01:00",
+          "to": to,#"2017-07-01T00:00:00+02:00",
+          "tz": "Europe/Paris",
+          "limit": rsltCount,#2000,
+          "start":startIndex,#i*2000
+          "sortBy":"volumetry"
+        })
 
+def store_stories(startdate, enddate):
+    sd = startdate.isoformat() + "+02:00"
+    ed = enddate.isoformat() + "+02:00"
+    for i in range(50):
+        #i = j+31
+        with open('stories-'+str(i*1000)+'-'+str((i+1)*1000-1)+'.json', 'w') as f:
+    	    print i*1000
+            json.dump(collect_stories_period_page(sd, ed, i*1000, 1000), f)
+#print json.dumps(clusters)
 # Get top keywords
+
 def collect_words_period(frm, to):
     return download("/insights/cloud", {
       "fields": [],
@@ -97,5 +111,6 @@ def store_words(words, suffix=""):
             json.dump(words[key], f)
 
 if __name__ == "__main__":
-    store_words(collect_words(datetime(2016, 5, 1), datetime(2017, 7, 1), 7), "weekly")
-    store_words(collect_words(datetime(2017, 3, 1), datetime(2017, 7, 1)), "daily")
+#    store_words(collect_words(datetime(2016, 5, 1), datetime(2017, 7, 1), 7), "weekly")
+#    store_words(collect_words(datetime(2017, 3, 1), datetime(2017, 7, 1)), "daily")
+    store_stories(datetime(2016, 5, 1), datetime(2017, 7, 1))
