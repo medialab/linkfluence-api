@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-import os, json
+import os
+import json
+import time
 import hashlib
 import requests
 from datetime import datetime, timedelta
@@ -28,8 +30,9 @@ def download(route="", args={}):
         res = requests.post(url, headers=headers, data=json.dumps(args))
     if res.status_code == 429:
         print "ERROR: while collecting", route, args
-        print "too many calls for now, please retry in a few minutes"
-        exit(1)
+        print "too many calls for now, will retry in a few minutes"
+        time.sleep(60)
+        return download(route, args)
     data = res.json()
     with open(cache, "w") as f:
         json.dump(data, f)
