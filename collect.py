@@ -25,6 +25,10 @@ def download(route="", args={}):
         res = requests.get(url, headers=headers)
     else:
         res = requests.post(url, headers=headers, data=json.dumps(args))
+    if res.status_code == 429:
+        print "ERROR: while collecting", route, args
+        print "too many calls for now, please retry in a few minutes"
+        exit(1)
     data = res.json()
     with open(cache, "w") as f:
         json.dump(data, f)
