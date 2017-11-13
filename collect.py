@@ -7,9 +7,8 @@ from datetime import datetime, timedelta
 
 from config import API_URL, PROJECT_ID, AUTH_TOKEN
 
-for d in [".cache", "data"]:
-    if not os.path.exists(d):
-        os.makedirs(d)
+if not os.path.exists(".cache"):
+    os.makedirs(".cache")
 
 def download(route="", args={}):
     url = "%s%s%s.json" % (API_URL, PROJECT_ID, route)
@@ -53,11 +52,12 @@ def collect_stories_period_page(frm, to, startIndex, rsltCount):
 def store_stories(startdate, enddate):
     sd = startdate.isoformat() + "+02:00"
     ed = enddate.isoformat() + "+02:00"
-    for i in range(50):
-        #i = j+31
-        with open('stories-'+str(i*1000)+'-'+str((i+1)*1000-1)+'.json', 'w') as f:
-    	    print i*1000
-            json.dump(collect_stories_period_page(sd, ed, i*1000, 1000), f)
+    for j in range(50):
+        i = j+33
+        rslt_size = 1000
+        with open('stories-'+str(i*rslt_size)+'-'+str((i+1)*rslt_size-1)+'.json', 'w') as f:
+    	    print i*rslt_size
+            json.dump(collect_stories_period_page(sd, ed, i*rslt_size, rslt_size), f)
 #print json.dumps(clusters)
 # Get top keywords
 
