@@ -7,8 +7,9 @@ from datetime import datetime, timedelta
 
 from config import API_URL, PROJECT_ID, AUTH_TOKEN
 
-if not os.path.exists(".cache"):
-    os.makedirs(".cache")
+for d in [".cache", "data"]:
+    if not os.path.exists(d):
+        os.makedirs(d)
 
 def download(route="", args={}):
     url = "%s%s%s.json" % (API_URL, PROJECT_ID, route)
