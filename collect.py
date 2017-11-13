@@ -30,21 +30,28 @@ def download(route="", args={}):
     return data
 
 # Get project settings
-settings = download()
+#settings = download()
 
 # Get clusters
-clusters = download("/stories", {
-  "interval": "weeks",
-  "from": "2016-05-01T00:00:00+01:00",
-  "to": "2017-07-01T00:00:00+02:00",
-  "tz": "Europe/Paris"
-})
-
+for i in range(10):
+#    i = j+8
+    with open('stories-'+str(i*2000)+'-'+str((i+1)*2000-1)+'.json', 'w') as f:
+    	print i*2000
+        clusters = download("/stories", {
+          "interval": "weeks",
+          "from": "2016-05-01T00:00:00+01:00",
+          "to": "2017-07-01T00:00:00+02:00",
+          "tz": "Europe/Paris",
+          "limit": 2000,
+          "start":i*2000
+        })
+        json.dump(clusters, f)
+#print json.dumps(clusters)
 # Get top keywords
-keywords = download("/insights/cloud", {
-  "fields": [],
-  "metrics": ["doc", "reach", "impression"],
-  "from": "2016-05-01T00:00:00+01:00",
-  "to": "2017-07-01T00:00:00+02:00",
-  "tz": "Europe/Paris"
-})
+#keywords = download("/insights/cloud", {
+#  "fields": [],
+ # "metrics": ["doc", "reach", "impression"],
+  #"from": "2016-05-01T00:00:00+01:00",
+ # "to": "2017-07-01T00:00:00+02:00",
+  #"tz": "Europe/Paris"
+#})
