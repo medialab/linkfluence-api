@@ -102,7 +102,7 @@ def collect_words(startdate, enddate, focus=None, days=1):
 
 format_for_csv = lambda x: unicode(x).encode("utf-8")
 def store_words(startdate, enddate, days=1, focus=("", None)):
-    words = collect_words(startdate, enddate, focus[1])
+    words = collect_words(startdate, enddate, focus[1], days)
     suffix = ""
     if focus[1]:
         suffix = "_" + focus[0]
