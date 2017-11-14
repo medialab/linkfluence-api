@@ -143,12 +143,12 @@ def store_words(startdate, enddate, days=1, focus=("", None)):
 
 if __name__ == "__main__":
     store_stories(datetime(2016, 5, 1), datetime(2017, 7, 1), False)
-  #  for focus in [
-   #   ("hamon", 83192),
-    #  ("macron", 82709),
-     # ("fillon", 82719),
-      #("melenchon", 82713),
-   #   ("le-pen", 103736)
-    #]:
-     #   store_words(datetime(2017, 3, 3), datetime(2017, 7, 1), 1, focus)
-      #  store_words(datetime(2016, 5, 1), datetime(2017, 7, 1), 7, focus)
+    for focus in [
+      ("hamon", 83192),
+      ("macron", 82709),
+      ("fillon", 82719),
+      ("melenchon", 82713),
+      ("le-pen", 103736)
+    ]:
+        store_words(datetime(2017, 3, 3), datetime(2017, 7, 1), 1, focus)
+        store_words(datetime(2016, 5, 1), datetime(2017, 7, 1), 7, focus)
