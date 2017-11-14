@@ -9,8 +9,9 @@ from datetime import datetime, timedelta
 
 from config import API_URL, PROJECT_ID, AUTH_TOKEN
 
-if not os.path.exists(".cache"):
-    os.makedirs(".cache")
+for d in [".cache", "data"]:
+    if not os.path.exists(d):
+        os.makedirs(d)
 
 def download(route="", args={}):
     url = "%s%s%s.json" % (API_URL, PROJECT_ID, route)
@@ -78,7 +79,7 @@ def store_stories(startdate, enddate, rt=False):
     ed = enddate.isoformat() + "+02:00"
     suffix = '' if rt == False else '-withRT'
     for j in range(50):
-        i = j+96
+        i = j+97
         rslt_size = 1000
         with open('stories-'+str(i*rslt_size)+'-'+str((i+1)*rslt_size-1)+suffix+'.json', 'w') as f:
     	    print i*rslt_size
@@ -143,12 +144,12 @@ def store_words(startdate, enddate, days=1, focus=("", None)):
 
 if __name__ == "__main__":
     store_stories(datetime(2016, 5, 1), datetime(2017, 7, 1), False)
-    for focus in [
-      ("hamon", 83192),
-      ("macron", 82709),
-      ("fillon", 82719),
-      ("melenchon", 82713),
-      ("le-pen", 103736)
-    ]:
-        store_words(datetime(2017, 3, 3), datetime(2017, 7, 1), 1, focus)
-        store_words(datetime(2016, 5, 1), datetime(2017, 7, 1), 7, focus)
+#    for focus in [
+#      ("hamon", 83192),
+#      ("macron", 82709),
+#      ("fillon", 82719),
+#      ("melenchon", 82713),
+#      ("le-pen", 103736)
+#    ]:
+#        store_words(datetime(2017, 3, 3), datetime(2017, 7, 1), 1, focus)
+#        store_words(datetime(2016, 5, 1), datetime(2017, 7, 1), 7, focus)
