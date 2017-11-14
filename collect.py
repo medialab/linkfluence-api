@@ -23,10 +23,16 @@ def download(route="", args={}):
       "Authorization": "Bearer %s" % AUTH_TOKEN,
       "Content-Type": "application/json"
     }
-    if not args:
-        res = requests.get(url, headers=headers)
-    else:
-        res = requests.post(url, headers=headers, data=json.dumps(args))
+    try:
+        if not args:
+            res = requests.get(url, headers=headers)
+        else:
+            res = requests.post(url, headers=headers, data=json.dumps(args))
+    except requests.exceptions.ConnectionError:
+        print "ERROR: while collecting", route, args
+        print "no answer from server, will retry in a minute"
+        time.sleep(60)
+        return download(route, args)
     if res.status_code == 429:
         print "ERROR: while collecting", route, args
         print "too many calls for now, will retry in a few minutes"
@@ -40,8 +46,22 @@ def download(route="", args={}):
 # Get project settings
 #settings = download()
 
+# Get top links
+def collect_top_links(frm, to, startIndex, rsltCount, rt=False):
+	return download("/insights/most-shared-url", {
+          "interval": "day",
+          "from": frm,#"2016-05-01T00:00:00+01:00",
+          "to": to,#"2017-07-01T00:00:00+02:00",
+          "tz": "Europe/Paris",
+          "limit": rsltCount,#2000,
+          "start":startIndex,#i*2000
+          #"sortBy":"volumetry",
+          "flag":{"rt":rt}
+        })
+
+
 # Get clusters
-def collect_stories_period_page(frm, to, startIndex, rsltCount):
+def collect_stories_period_page(frm, to, startIndex, rsltCount, rt=False):
     return download("/stories", {
           "interval": "day",
           "from": frm,#"2016-05-01T00:00:00+01:00",
@@ -49,18 +69,20 @@ def collect_stories_period_page(frm, to, startIndex, rsltCount):
           "tz": "Europe/Paris",
           "limit": rsltCount,#2000,
           "start":startIndex,#i*2000
-          "sortBy":"volumetry"
+          "sortBy":"volumetry",
+          "flag":{"rt":rt}
         })
 
-def store_stories(startdate, enddate):
+def store_stories(startdate, enddate, rt=False):
     sd = startdate.isoformat() + "+02:00"
     ed = enddate.isoformat() + "+02:00"
+    suffix = '' if rt == False else '-withRT'
     for j in range(50):
-        i = j+33
+        i = j+96
         rslt_size = 1000
-        with open('stories-'+str(i*rslt_size)+'-'+str((i+1)*rslt_size-1)+'.json', 'w') as f:
+        with open('stories-'+str(i*rslt_size)+'-'+str((i+1)*rslt_size-1)+suffix+'.json', 'w') as f:
     	    print i*rslt_size
-            json.dump(collect_stories_period_page(sd, ed, i*rslt_size, rslt_size), f)
+            json.dump(collect_stories_period_page(sd, ed, i*rslt_size, rslt_size, rt), f)
 #print json.dumps(clusters)
 # Get top keywords
 
@@ -120,13 +142,13 @@ def store_words(startdate, enddate, days=1, focus=("", None)):
             json.dump(words[key], f)
 
 if __name__ == "__main__":
-    store_stories(datetime(2016, 5, 1), datetime(2017, 7, 1))
-    for focus in [
-      ("hamon", 83192),
-      ("macron", 82709),
-      ("fillon", 82719),
-      ("melenchon", 82713),
-      ("le-pen", 103736)
-    ]:
-        store_words(datetime(2017, 3, 3), datetime(2017, 7, 1), 1, focus)
-        store_words(datetime(2016, 5, 1), datetime(2017, 7, 1), 7, focus)
+    store_stories(datetime(2016, 5, 1), datetime(2017, 7, 1), False)
+  #  for focus in [
+   #   ("hamon", 83192),
+    #  ("macron", 82709),
+     # ("fillon", 82719),
+      #("melenchon", 82713),
+   #   ("le-pen", 103736)
+    #]:
+     #   store_words(datetime(2017, 3, 3), datetime(2017, 7, 1), 1, focus)
+      #  store_words(datetime(2016, 5, 1), datetime(2017, 7, 1), 7, focus)
