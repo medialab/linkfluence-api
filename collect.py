@@ -90,7 +90,7 @@ def store_top_links(startdate, enddate, days=1, focus=("", None), rt=False):
         suffix += "_weekly"
     if rt == True:
         suffix += "_withRT"
-    headers = ["date", "normalized", "reversed"]
+#    headers = ["date", "normalized", "reversed"]
 #    with open(os.path.join("data", key + suffix + ".csv"), "w") as f:
 #        print >> f, ",".join(headers)
 #        for row in words[key]:
@@ -170,6 +170,8 @@ def store_words(startdate, enddate, days=1, focus=("", None), rt=False):
         suffix += "_daily"
     elif days == 7:
         suffix += "_weekly"
+    if rt == True:
+        suffix += "_withRT"
     for key in ["hashtags", "mentions", "namedEntities"]:
         headers = ["date", key[:-1], "doc", "impression", "reach"]
         with open(os.path.join("data", key + suffix + ".csv"), "w") as f:
