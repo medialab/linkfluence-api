@@ -88,12 +88,13 @@ def store_top_links(startdate, enddate, days=1, focus=("", None), rt=False):
         suffix += "_daily"
     elif days == 7:
         suffix += "_weekly"
-
-#    headers = ["date", "normalized", "reversed"]
- #       with open(os.path.join("data", key + suffix + ".csv"), "w") as f:
-  #          print >> f, ",".join(headers)
-   #         for row in words[key]:
-    #            print >> f, ",".join([format_for_csv(row[h]) for h in headers])
+    if rt == True:
+        suffix += "_withRT"
+    headers = ["date", "normalized", "reversed"]
+#    with open(os.path.join("data", key + suffix + ".csv"), "w") as f:
+#        print >> f, ",".join(headers)
+#        for row in words[key]:
+#            print >> f, ",".join([format_for_csv(row[h]) for h in headers])
     with open(os.path.join("data", "toplinks" + suffix + ".json"), "w") as f:
          json.dump(top_links, f)
 # Get clusters
@@ -122,19 +123,20 @@ def store_stories(startdate, enddate, rt=False):
 #print json.dumps(clusters)
 # Get top keywords
 
-def collect_words_period(frm, to, focus=None):
+def collect_words_period(frm, to, focus=None, rt=False):
     args = {
       "fields": [],
       "metrics": ["doc", "reach", "impression"],
       "from": frm,
       "to": to,
-      "tz": "Europe/Paris"
+      "tz": "Europe/Paris",
+      "flag":{"rt":rt}
     }
     if focus:
         args["focuses"] = focus
     return download("/insights/cloud", args)["cloud"]
 
-def collect_words(startdate, enddate, focus=None, days=1):
+def collect_words(startdate, enddate, focus=None, days=1, rt=False):
     results = {
       "namedEntities": [],
       "hashtags": [],
@@ -147,7 +149,7 @@ def collect_words(startdate, enddate, focus=None, days=1):
         print dat.isoformat()[:10], focus
         enddat = dat + timedelta(days=days)
         enddt = enddat.isoformat() + "+02:00"
-        res = collect_words_period(dt, enddt, focus)
+        res = collect_words_period(dt, enddt, focus, rt)
         for key in ["hashtags", "mentions", "namedEntities"]:
             k = key[:-1]
             for word, val in res[key].items():
@@ -159,8 +161,8 @@ def collect_words(startdate, enddate, focus=None, days=1):
     return results
 
 format_for_csv = lambda x: unicode(x).encode("utf-8")
-def store_words(startdate, enddate, days=1, focus=("", None)):
-    words = collect_words(startdate, enddate, focus[1], days)
+def store_words(startdate, enddate, days=1, focus=("", None), rt=False):
+    words = collect_words(startdate, enddate, focus[1], days, rt)
     suffix = ""
     if focus[1]:
         suffix = "_" + focus[0]
