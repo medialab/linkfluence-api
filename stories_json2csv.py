@@ -3,39 +3,43 @@ import json
 import csv
 import sys
 
-def stories_json2csv(f, g):
+def stories_json2csv(f, g, write_header = True, dup_set = None):
     jsonfile = json.load(f)
     csvfile = csv.writer(g)
-    csvfile.writerow([\
-    'Story Id',\
-    # Dates
-    'First date',\
-    'Threshold Date',\
-    # Named Entities
-    'Organization namedEntities',\
-    'Person namedEntites',\
-    'Location namedEntites',\
-    'Miscellaneous namedEntites',\
-    # Content info
-    'Title',\
-#    'Text',\
-    'Language',\
-    'Permalink',\
-    # Document counts
-    'Daily document count',\
-    'Twitter document count',\
-    'Website document count',\
-    'Media document count',\
-    'Blog document count',\
-    'Facebook document count',\
-    'Google+ document count',\
-    'Positive tone document count',\
-    'Neutral tone document count',\
-    'Negative tone document count',\
-    'Mixed tone document count',\
-    'Total document count'\
-    ])
+    if write_header:
+        csvfile.writerow([\
+        'Story Id',\
+        # Dates
+        'First date',\
+        'Threshold Date',\
+        # Named Entities
+        'Organization namedEntities',\
+        'Person namedEntites',\
+        'Location namedEntites',\
+        'Miscellaneous namedEntites',\
+        # Content info
+        'Title',\
+    #    'Text',\
+        'Language',\
+        'Permalink',\
+        # Document counts
+        'Daily document count',\
+        'Twitter document count',\
+        'Website document count',\
+        'Media document count',\
+        'Blog document count',\
+        'Facebook document count',\
+        'Google+ document count',\
+        'Positive tone document count',\
+        'Neutral tone document count',\
+        'Negative tone document count',\
+        'Mixed tone document count',\
+        'Total document count'\
+        ])
     for doc in jsonfile['hits']:
+        if doc['story'] in dup_set:
+            continue
+        dup_set.add(doc['story'])
         # Aggregation pre-process
         day_aggreg = []
         for i in doc['stats']['days']:
@@ -73,6 +77,7 @@ def stories_json2csv(f, g):
         ]
         #csvfile.writerow([unicode(x).encode("utf-8") for x in line])
         csvfile.writerow(line)
+    return dup_set
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
