@@ -1,4 +1,4 @@
-import json, requests, sys
+import json, requests, sys, os
 
 from APIdownload import download
 
@@ -18,6 +18,7 @@ def search_pub(query, frm="2016-05-01T00:00:00+02:00", to="2017-07-01T00:00:00+0
 
 def make_search_query_from_url(base_url):
     prefixes = ['http://', 'https://', 'http://www.', 'https://www.']
+    base_url = base_url.replace('https://', '').replace('http://', '').replace('www', '')
     return ' OR '.join(['"'+prefix+base_url+'"' for prefix in prefixes])
 
 def make_search_query_from_url_list(url_list):
@@ -40,14 +41,21 @@ if __name__ == '__main__':
         sys.exit('USAGE : '+sys.argv[0]+' [decodexJSON] [destDir]')
     wonderful_dict = make_wonderful_dict(json.load(open(sys.argv[1])))
     for decodex_id, decodex_info in wonderful_dict.items():
-        rslt = {'decodex_id':decodex_id, 'decodex_entity_name':decodex_info[1],\
-        'decodex_entity_trust_score':decodex_info[2], 'decodex_entity_description':decodex_info[3]}
-        query = make_search_query_from_url_list(decodex_info[0])
-        print(decodex_info[1])
-        rslt['radarly_hits'] = search_pub(query)['hits']
-        if rslt['radarly_hits'] != []:
-            with open(sys.argv[2]+str(decodex_id)+'-'+decodex_info[1].replace(' ', '_').replace("'", "_")+'.json', 'w') as f:
-                json.dump(rslt, f)
+        filename = os.path.join(sys.argv[2], str(decodex_id)+'-'+decodex_info[1].replace(' ', '_').replace("'", "_").replace('://', '').replace('/', '_')+'.json')
+        if not os.path.exists(filename):
+            rslt = {'decodex_id':decodex_id, 'decodex_entity_name':decodex_info[1],\
+            'decodex_entity_trust_score':decodex_info[2], 'decodex_entity_description':decodex_info[3]}
+            query = make_search_query_from_url_list(decodex_info[0])
+            print(decodex_info[1], end='...')
+            rslt['radarly_hits'] = search_pub(query)['hits']
+            if rslt['radarly_hits'] != []:
+                with open(filename, 'w') as f:
+                    json.dump(rslt, f)
+                print('done')
+            else:
+                print('no match !')
+        else:
+            print('Skipping', decodex_info[1], ': already exists')
 #    print(wonderful_dict)
     #print(make_search_query('sott.net'))
     
